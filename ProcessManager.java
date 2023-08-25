@@ -101,7 +101,7 @@ public class ProcessManager implements Runnable{
         terminatedQueue.offer(process);
     }
 
-    private void moveToNewQueue(Process process){
+    public void putOnNewQueue(Process process){
         newQueue.offer(process);
     }
 
