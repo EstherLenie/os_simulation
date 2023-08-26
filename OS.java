@@ -9,7 +9,8 @@ public class OS implements Runnable{
     private final ProcessManager processManager = new ProcessManager();
     public final Queue<Integer> sytemCallParametersList = new LinkedList<>(); 
     public  final ArrayBlockingQueue<Integer> systemCallSignal = new ArrayBlockingQueue<>(1);
-    public final Semaphore semaphore = new Semaphore(1);
+    public final Semaphore semaphoreCon = new Semaphore(0);
+    public final Semaphore semaphoreProd = new Semaphore(1);
 
     private final MemoryManager memoryManager;
     private Machine machine;
@@ -30,7 +31,10 @@ public class OS implements Runnable{
 
         while (true){
             try{
-                int signal = systemCallSignal.take();
+                semaphoreCon.acquire();
+                int systemCallId = sytemCallParametersList.poll();
+                handleSystemCall(systemCallId);
+                semaphoreProd.release();
 
             }catch(InterruptedException e){
 
@@ -38,39 +42,47 @@ public class OS implements Runnable{
         }
     }
 
-    public ArrayBlockingQueue getSistemCallSignal(){
+    public ArrayBlockingQueue<Integer> getSistemCallSignal(){
         return systemCallSignal;
     }
 
-    public Queue getSystemCallParametersList(){
+    public Queue<Integer> getSystemCallParametersList(){
         return sytemCallParametersList;
     }
 
-    public Semaphore getSemaphore(){
-        return semaphore;
+    public Semaphore getSemaphoreCon(){
+        return semaphoreCon;
+    }
+
+    public Semaphore getSemaphoreProd(){
+        return semaphoreProd;
     }
 
     private void handleSystemCall(int sistemCallId){
-        semaphore.acquire();
-        
-        switch(sistemCallId){
-            case 0:
-                createNewProcess();
-        }
+            switch(sistemCallId){
+                case 0:
+                    createNewProcess();
+                case 1:
+                    getHour();
+            }
 
-        semaphore.release();
     }
 
     private void createNewProcess(){
-        int PID = numProcessCreated++;
+        int PID = ++numProcessCreated;
         Process process = new Process(PID);
 
         int numFramesAllocated = memoryManager.allocateMemory(PID, process.getSize());
         if (numFramesAllocated == 0){
-
+            System.out.println("not enough space to create process");
         }
 
         processManager.putOnNewQueue(process);
+        System.out.println("process created. PID "+ PID);
+    }
+
+    private void getHour(){
+        System.out.println("hello world");
     }
 
 

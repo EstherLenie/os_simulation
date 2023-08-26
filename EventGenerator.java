@@ -3,68 +3,71 @@ import java.util.Random;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.Queue;
+import java.util.LinkedList;
 
 public class EventGenerator extends Thread
 { 
-    public Semaphore semaphore;
+    public Semaphore semCon;
+    public Semaphore semProd;
     private String interruption;
     private String threadName;
-    private final int EventId;
-    private Queue systemCallParameters; 
+    private int EventId;
+    private Queue<Integer> systemCallParameters; 
+    private Queue<Integer> listOfParams = new LinkedList<>();
     public ArrayBlockingQueue<Integer> systemCallSignal;
 
-    public EventGenerator(Semaphore semaphore, Queue parameters, ArrayBlockingQueue sistemCallSignal){
+    public EventGenerator(Semaphore semCon, Semaphore semProd, Queue<Integer> parameters, ArrayBlockingQueue<Integer> sistemCallSignal){
         this.systemCallSignal = sistemCallSignal;
         this.systemCallParameters = parameters;
-        this.semaphore = semaphore;
+        this.semCon = semCon;
+        this.semProd = semProd;
     }
     
     public  void run ()
     {    
         Random random = new Random() ;
-        int EventId = random.nextInt(1);
-        interruption = new String();
+        while(true){
+            try {
+                semProd.acquire();
+                int EventId = random.nextInt(1); 
+                listOfParams.offer(EventId);
 
-        semaphore.acquire();
-        systemCallParameters.offer(EventId);
-
-        switch(EventId)
-        {
-            case 0:
-                int param = random.nextInt();
-                systemCallParameters.offer(param);
-                System.out.println("Interruption ayant pour ID"+ EventId);
-
-                try {
-                    systemCallSignal.put(1); 
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
+                switch(EventId){
+                    case 0:
+                        listOfParams.offer(random.nextInt(100));
+                        System.out.println("Interruption ayant pour ID"+ EventId);
+                        break;
+                    case 1:
+                        listOfParams.offer(random.nextInt(400));
+                        System.out.println("Interruption ayant pour ID"+ EventId);
+                    break;
+                    case 2:
+                        System.out.println("Interruption ayant pour ID"+ EventId);
+                     //   simulation.put(this.EventId);
+                        break;
+                    case 3:
+                        System.out.println("Interruption ayant pour ID"+ EventId);
+                      //   simulation.put(this.EventId);
+                        break;
+                    case 4:
+                        System.out.println("Interruption ayant pour ID"+ EventId);
+                        //  simulation.put(this.EventId);
+                        break;
+                    case 5:
+                        System.out.println("Interruption ayant pour ID"+ EventId);
+                        // simulation.put(this.EventId);
+                        break;
                 }
-               // simulation.put(this.EventId);
-                break;
-        case 1:
-            System.out.println("Interruption ayant pour ID"+ EventId);
-          //  simulation.put(this.EventId);
-            break;
-        case 2:
-            System.out.println("Interruption ayant pour ID"+ EventId);
-         //   simulation.put(this.EventId);
-            break;
-        case 3:
-            System.out.println("Interruption ayant pour ID"+ EventId);
-          //   simulation.put(this.EventId);
-            break;
-        case 4:
-            System.out.println("Interruption ayant pour ID"+ EventId);
-           //  simulation.put(this.EventId);
-            break;
-        case 5:
-            System.out.println("Interruption ayant pour ID"+ EventId);
-            // simulation.put(this.EventId);
-            break;
-        }   
-        semaphore.release();    
+
+                while(listOfParams.size()>0){           
+                    systemCallParameters.offer(listOfParams.poll()); 
+                }         
+            }catch(InterruptedException e){
+                System.out.println("semaphore acquire failed");
+            }finally{
+                semCon.release();
+            }
+                             
+        }
     }
- 
-    
 }

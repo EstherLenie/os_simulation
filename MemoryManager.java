@@ -72,9 +72,9 @@ class MemoryManager {
         }
         
         List<MemoryPage> allocatedFrames = new ArrayList<>();
-        while (freeFrames > 0) {
+        while (freeFrames > 0 && allocatedFrames.size() < numFrames) {
             MemoryPage page = pages.poll();
-            if (!page.isAllocated() && allocatedFrames.size() < numFrames) {
+            if (!page.isAllocated() ) {
                 page.allocate(processId);
                 allocatedFrames.add(page);
                 freeFrames--;

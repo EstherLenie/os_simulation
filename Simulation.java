@@ -9,11 +9,12 @@ public class Simulation{
         Thread osThread = new Thread(os);
         osThread.start();
 
-        Semaphore semaphore = os.getSemaphore();
+        Semaphore semaphoreCon = os.getSemaphoreCon();
+        Semaphore semaphoreProd = os.getSemaphoreProd();
         Queue sistemCallParametersList = os.getSystemCallParametersList();
         ArrayBlockingQueue sistemCallSignal = os.getSistemCallSignal();
 
-        Thread eventGenerator = new Thread(new EventGenerator(semaphore, sistemCallParametersList, sistemCallSignal));
+        Thread eventGenerator = new Thread(new EventGenerator(semaphoreCon, semaphoreProd, sistemCallParametersList, sistemCallSignal));
         eventGenerator.start();
     }
 }
