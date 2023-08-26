@@ -5,7 +5,7 @@ import java.util.concurrent.Semaphore;
 
 public class Simulation{
     public static void main(String[] args){
-        OS os = new OS (new Machine());
+        OS os = new OS(new Machine());
         Thread osThread = new Thread(os);
         osThread.start();
 
