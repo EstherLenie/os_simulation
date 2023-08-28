@@ -32,8 +32,11 @@ public class OS implements Runnable{
         while (true){
             try{
                 semaphoreCon.acquire();
+                stopProcessScheduler();
                 int systemCallId = sytemCallParametersList.poll();
                 handleSystemCall(systemCallId);
+                processManagerThread = new Thread(processManager, "processmanager");
+                processManagerThread.start();
                 semaphoreProd.release();
 
             }catch(InterruptedException e){
@@ -85,5 +88,11 @@ public class OS implements Runnable{
         System.out.println("hello world");
     }
 
-
+    private void stopProcessScheduler(){
+        try{
+            processManagerThread.interrupt();
+        }catch(SecurityException e){
+            System.exit(-1);
+        }
+    }
 }

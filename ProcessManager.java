@@ -19,6 +19,7 @@ public class ProcessManager implements Runnable{
     private int quantum = 4; 
     private Timer timer; 
     private boolean stop = false;
+    private int numProcesses;
 
     public ProcessManager() {
         newQueue = new LinkedList<>();
@@ -26,7 +27,6 @@ public class ProcessManager implements Runnable{
         waitingQueue = new LinkedList<>();
         terminatedQueue = new LinkedList<>();
         runningProcess = null; 
-        
       
         timerTask = new TimerTask() {
             @Override
@@ -52,6 +52,7 @@ public class ProcessManager implements Runnable{
             if (runningProcess != null && runningProcess.isFinished()) {
                 moveToTerminatedQueue(runningProcess);
                 runningProcess = null;
+                numProcesses--;
             }
 
             if (runningProcess == null && !readyQueue.isEmpty()) {
@@ -59,7 +60,7 @@ public class ProcessManager implements Runnable{
                 startTimer(); 
 
                 try {
-                    int valeur = signal.take(); 
+                    signal.take(); 
                     moveToReadyQueue(runningProcess);
                     runningProcess=null;
                 } catch (InterruptedException e) {
@@ -75,6 +76,7 @@ public class ProcessManager implements Runnable{
     }
 
     private void handleTimerInterrupt() {
+        timer.cancel();
         if (runningProcess != null) {
             runningProcess.decreaseExecTime(quantum);
             try {
@@ -89,7 +91,7 @@ public class ProcessManager implements Runnable{
         if (timer != null) { 
             timer.cancel(); 
         }
-
+        timer = new Timer("processManagerTimer");
         timer.schedule(timerTask, quantum);
     }
 
@@ -103,6 +105,7 @@ public class ProcessManager implements Runnable{
 
     public void putOnNewQueue(Process process){
         newQueue.offer(process);
+        numProcesses++;
     }
 
     private void moveToWaitingQueue(Process process){
@@ -115,6 +118,10 @@ public class ProcessManager implements Runnable{
 
     public void stopScheduler(){
         stop = false;
+    }
+
+    public int getNumProcess(){
+        return numProcesses;
     }
 
 }

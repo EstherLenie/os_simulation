@@ -1,4 +1,4 @@
-
+import java.lang.Thread;
 import java.util.Random;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -14,10 +14,8 @@ public class EventGenerator extends Thread
     private int EventId;
     private Queue<Integer> systemCallParameters; 
     private Queue<Integer> listOfParams = new LinkedList<>();
-    public ArrayBlockingQueue<Integer> systemCallSignal;
 
-    public EventGenerator(Semaphore semCon, Semaphore semProd, Queue<Integer> parameters, ArrayBlockingQueue<Integer> sistemCallSignal){
-        this.systemCallSignal = sistemCallSignal;
+    public EventGenerator(Semaphore semCon, Semaphore semProd, Queue<Integer> parameters){
         this.systemCallParameters = parameters;
         this.semCon = semCon;
         this.semProd = semProd;
@@ -61,6 +59,8 @@ public class EventGenerator extends Thread
 
                 while(listOfParams.size()>0){           
                     systemCallParameters.offer(listOfParams.poll()); 
+
+                Thread.sleep(1000);
                 }         
             }catch(InterruptedException e){
                 System.out.println("semaphore acquire failed");
