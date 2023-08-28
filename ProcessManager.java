@@ -8,7 +8,7 @@ import java.lang.Runnable;
 public class ProcessManager implements Runnable{
     private Queue<Process> newQueue;    
     private Queue<Process> readyQueue;   
-    private Queue<Process> waitingQueue;  
+    //private Queue<Process> waitingQueue;  
     private Queue<Process> terminatedQueue;
 
     ArrayBlockingQueue<Integer> signal = new ArrayBlockingQueue<>(1);
@@ -16,7 +16,7 @@ public class ProcessManager implements Runnable{
     private TimerTask timerTask;
 
     private Process runningProcess; 
-    private int quantum = 4; 
+    private int quantum = 8000; 
     private Timer timer; 
     private boolean stop = false;
     private int numProcesses;
@@ -24,16 +24,9 @@ public class ProcessManager implements Runnable{
     public ProcessManager() {
         newQueue = new LinkedList<>();
         readyQueue = new LinkedList<>();
-        waitingQueue = new LinkedList<>();
+       // waitingQueue = new LinkedList<>();
         terminatedQueue = new LinkedList<>();
         runningProcess = null; 
-      
-        timerTask = new TimerTask() {
-            @Override
-            public void run() {
-                handleTimerInterrupt();
-            }
-        };
     }
 
     public void addProcess(Process process) {
@@ -49,18 +42,19 @@ public class ProcessManager implements Runnable{
                 readyQueue.offer(newProcess);
             }
 
-            if (runningProcess != null && runningProcess.isFinished()) {
-                moveToTerminatedQueue(runningProcess);
-                runningProcess = null;
-                numProcesses--;
-            }
-
             if (runningProcess == null && !readyQueue.isEmpty()) {
                 runningProcess = readyQueue.poll();
                 startTimer(); 
-
+                System.out.println(runningProcess.getId());
                 try {
-                    signal.take(); 
+                    Integer s = signal.take(); 
+                    runningProcess.decreaseExecTime(2);
+                    if (runningProcess.isFinished()) {
+                        moveToTerminatedQueue(runningProcess);
+                        runningProcess = null;
+                        numProcesses--;
+                        continue;
+                    }
                     moveToReadyQueue(runningProcess);
                     runningProcess=null;
                 } catch (InterruptedException e) {
@@ -71,26 +65,35 @@ public class ProcessManager implements Runnable{
         }
 
         if (timer != null) {
-            timer.cancel();
+            try{
+                timer.wait();
+            }catch (InterruptedException e){
+
+            }
+            runningProcess = null;
         }
     }
 
     private void handleTimerInterrupt() {
         timer.cancel();
-        if (runningProcess != null) {
-            runningProcess.decreaseExecTime(quantum);
             try {
                     signal.put(1);
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                 }
-        }
+        
     }
 
     private void startTimer() { 
         if (timer != null) { 
             timer.cancel(); 
         }
+        timerTask = new TimerTask() {
+            @Override
+            public void run() {
+                handleTimerInterrupt();
+            }
+        };
         timer = new Timer("processManagerTimer");
         timer.schedule(timerTask, quantum);
     }
@@ -108,9 +111,9 @@ public class ProcessManager implements Runnable{
         numProcesses++;
     }
 
-    private void moveToWaitingQueue(Process process){
-        waitingQueue.offer(process);
-    }
+    // private void moveToWaitingQueue(Process process){
+    //     waitingQueue.offer(process);
+    // }
 
     public void addNewProcess(Process newProcess){
         newQueue.offer(newProcess);

@@ -1,28 +1,24 @@
 import java.lang.Runnable;
 import java.lang.Thread;
-import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.Semaphore;
 import java.util.Queue;
 import java.util.LinkedList;
 
 public class OS implements Runnable{
-    private final ProcessManager processManager = new ProcessManager();
-    public final Queue<Integer> sytemCallParametersList = new LinkedList<>(); 
-    public  final ArrayBlockingQueue<Integer> systemCallSignal = new ArrayBlockingQueue<>(1);
-    public final Semaphore semaphoreCon = new Semaphore(0);
-    public final Semaphore semaphoreProd = new Semaphore(1);
+    private static final ProcessManager processManager = new ProcessManager();
+    public static final Queue<Integer> sytemCallParametersList = new LinkedList<>(); 
+    public static final Semaphore semaphoreCon = new Semaphore(0);
+    public static final Semaphore semaphoreProd = new Semaphore(1);
 
-    private final MemoryManager memoryManager;
+    private static MemoryManager memoryManager;
     private Machine machine;
 
     private int osSize = 10000;
 
     public OS(Machine machine){
         this.machine = machine;
-        this.memoryManager =  new MemoryManager(machine.memorySize, machine.frameSize, osSize);
+        memoryManager =  new MemoryManager(this.machine.memorySize, this.machine.frameSize, osSize);
     }
-
-    private int numProcessCreated = 0;
 
     private Thread processManagerThread = new Thread(processManager, "processManager");
 
@@ -45,23 +41,19 @@ public class OS implements Runnable{
         }
     }
 
-    public ArrayBlockingQueue<Integer> getSistemCallSignal(){
-        return systemCallSignal;
-    }
-
-    public Queue<Integer> getSystemCallParametersList(){
+    public static Queue<Integer> getSystemCallParametersList(){
         return sytemCallParametersList;
     }
 
-    public Semaphore getSemaphoreCon(){
+    public static Semaphore getSemaphoreCon(){
         return semaphoreCon;
     }
 
-    public Semaphore getSemaphoreProd(){
+    public static Semaphore getSemaphoreProd(){
         return semaphoreProd;
     }
 
-    private void handleSystemCall(int sistemCallId){
+    private  void handleSystemCall(int sistemCallId){
             switch(sistemCallId){
                 case 0:
                     createNewProcess();
@@ -72,7 +64,7 @@ public class OS implements Runnable{
     }
 
     private void createNewProcess(){
-        int PID = ++numProcessCreated;
+        int PID = processManager.getNumProcess() + 1;
         Process process = new Process(PID);
 
         int numFramesAllocated = memoryManager.allocateMemory(PID, process.getSize());
@@ -89,10 +81,10 @@ public class OS implements Runnable{
     }
 
     private void stopProcessScheduler(){
-        try{
-            processManagerThread.interrupt();
-        }catch(SecurityException e){
-            System.exit(-1);
-        }
+        processManager.stopScheduler();
+    }
+
+    public static void terminateProcess(int processId){
+        memoryManager.deallocateMemory(processId);
     }
 }

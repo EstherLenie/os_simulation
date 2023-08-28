@@ -8,20 +8,13 @@
             "type": "java",
             "name": "Current File",
             "request": "launch",
-            "mainClass": "Simulation"
+            "mainClass": "${file}"
         },
         {
             "type": "java",
             "name": "Simulation",
             "request": "launch",
             "mainClass": "Simulation",
-            "projectName": "OS_24608b9c"
-        },
-        {
-            "type": "java",
-            "name": "User",
-            "request": "launch",
-            "mainClass": "User",
             "projectName": "OS_24608b9c"
         }
     ]

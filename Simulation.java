@@ -1,9 +1,8 @@
 import java.lang.Thread;
 import java.util.Queue;
-import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.Semaphore;
 
-import org.w3c.dom.events.Event;
+//import org.w3c.dom.events.Event;
 
 public class Simulation{
     public static void main(String[] args){

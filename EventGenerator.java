@@ -1,7 +1,6 @@
 import java.lang.Thread;
 import java.util.Random;
 import java.util.concurrent.Semaphore;
-import java.util.concurrent.ArrayBlockingQueue;
 import java.util.Queue;
 import java.util.LinkedList;
 
@@ -9,9 +8,6 @@ public class EventGenerator extends Thread
 { 
     public Semaphore semCon;
     public Semaphore semProd;
-    private String interruption;
-    private String threadName;
-    private int EventId;
     private Queue<Integer> systemCallParameters; 
     private Queue<Integer> listOfParams = new LinkedList<>();
 
@@ -33,7 +29,7 @@ public class EventGenerator extends Thread
                 switch(EventId){
                     case 0:
                         listOfParams.offer(random.nextInt(100));
-                        System.out.println("Interruption ayant pour ID"+ EventId);
+                        //System.out.println("Interruption ayant pour ID"+ EventId);
                         break;
                     case 1:
                         listOfParams.offer(random.nextInt(400));
@@ -60,7 +56,7 @@ public class EventGenerator extends Thread
                 while(listOfParams.size()>0){           
                     systemCallParameters.offer(listOfParams.poll()); 
 
-                Thread.sleep(1000);
+                Thread.sleep(20000);
                 }         
             }catch(InterruptedException e){
                 System.out.println("semaphore acquire failed");

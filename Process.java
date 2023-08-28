@@ -17,8 +17,9 @@ public class Process {
     {   
         this.PID = PID;
         this.Size = generatedSize();
-        this.cycle_number =generatedTime();
+        this.cycle_number = generatedTime();
         this.cycleLeft = cycle_number;
+        this.isTemporary = true;
     }
 
     private int generatedSize ()// generer aleatoirement la quantite d'espace RAM que le process aura besoin
