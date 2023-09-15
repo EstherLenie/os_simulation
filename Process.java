@@ -3,37 +3,18 @@ import java.util.Random;
 public class Process {
 
     private  final int PID;
-    private final int cycle_number;
+    private final int cycleNumber;
     private final int Size;
     private boolean isTemporary;
     private int cycleLeft;
-  
-    private static final int MIN_SIZE = 256; // Lowest possible memory size for a process
-	private static final int MAX_SIZE = 1024; // Highest possible memory size for a process
-    private static final int MAX_CYCLE = 4; // Max cycle pour accomplir le process
-    private static final int MIN_CYCLE = 0; //MIN CYCLE pour accomplir le process
+    private ProcessState status;
 
-    public Process(int PID)
-    {   
+    public Process(int PID, int size, int cycleNumber){   
         this.PID = PID;
-        this.Size = generatedSize();
-        this.cycle_number = generatedTime();
-        this.cycleLeft = cycle_number;
+        this.Size = size;
+        this.cycleNumber = cycleNumber;
+        this.cycleLeft = cycleNumber;
         this.isTemporary = true;
-    }
-
-    private int generatedSize ()// generer aleatoirement la quantite d'espace RAM que le process aura besoin
-    {
-        Random random =new Random();
-        int size = random.nextInt(MAX_SIZE-MIN_SIZE+1)+ MIN_SIZE;
-        return size;
-    }
-
-    private int generatedTime () // generer le nombre de cycle necessaire pour finir le processus
-    {
-        Random random= new Random();
-        int cycle_number= random.nextInt(MAX_CYCLE- MIN_CYCLE+1)+ MIN_CYCLE;
-        return cycle_number;
     }
 
     int getId()
@@ -47,7 +28,7 @@ public class Process {
     }
     int getCycleNumber()
     {
-        return this.cycle_number;
+        return this.cycleNumber;
     }
 
       public int getPID(){
@@ -64,6 +45,15 @@ public class Process {
     public boolean isFinished(){
         return this.cycleLeft <= 0;
     }
+
+    public void setState(ProcessState state){
+        this.status = state;
+    }
+
+    public ProcessState getState(){
+        return status;
+    }
+
 }
 
     

@@ -10,6 +10,7 @@ public class EventGenerator extends Thread
     public Semaphore semProd;
     private Queue<Integer> systemCallParameters; 
     private Queue<Integer> listOfParams = new LinkedList<>();
+    Random random = new Random() ;
 
     public EventGenerator(Semaphore semCon, Semaphore semProd, Queue<Integer> parameters){
         this.systemCallParameters = parameters;
@@ -17,35 +18,28 @@ public class EventGenerator extends Thread
         this.semProd = semProd;
     }
     
-    public  void run ()
-    {    
-        Random random = new Random() ;
+    public void run (){    
         while(true){
             try {
                 semProd.acquire();
-                int EventId = random.nextInt(1); 
+                int EventId = random.nextInt(5); 
                 listOfParams.offer(EventId);
 
                 switch(EventId){
                     case 0:
-                        listOfParams.offer(random.nextInt(100));
-                        //System.out.println("Interruption ayant pour ID"+ EventId);
+                        requestProcessCreation();
                         break;
                     case 1:
-                        listOfParams.offer(random.nextInt(400));
-                        System.out.println("Interruption ayant pour ID"+ EventId);
+                        requestStringPrinting();
                     break;
                     case 2:
-                        System.out.println("Interruption ayant pour ID"+ EventId);
-                     //   simulation.put(this.EventId);
+                        requestFileCreation();
                         break;
                     case 3:
-                        System.out.println("Interruption ayant pour ID"+ EventId);
-                      //   simulation.put(this.EventId);
+                      // request file creation
                         break;
                     case 4:
-                        System.out.println("Interruption ayant pour ID"+ EventId);
-                        //  simulation.put(this.EventId);
+                        // request process id
                         break;
                     case 5:
                         System.out.println("Interruption ayant pour ID"+ EventId);
@@ -55,15 +49,37 @@ public class EventGenerator extends Thread
 
                 while(listOfParams.size()>0){           
                     systemCallParameters.offer(listOfParams.poll()); 
-
-                Thread.sleep(20000);
                 }         
             }catch(InterruptedException e){
                 System.out.println("semaphore acquire failed");
             }finally{
                 semCon.release();
             }
-                             
+            try{
+                Thread.sleep(1000);  
+            }catch(InterruptedException e){
+                
+            }       
+        }
+    }
+
+    private void requestProcessCreation(){
+        generateParams(2);
+    }
+
+    private void requestStringPrinting(){
+        int stringLength = random.nextInt(500);
+        generateParams(stringLength);
+    }
+
+    private void requestFileCreation(){
+        int fileContent = random.nextInt(500);
+        generateParams(fileContent);
+    }
+
+    private void generateParams(int length){
+        for (int i= 0; i<length; i++){
+            listOfParams.offer(random.nextInt(256));
         }
     }
 }

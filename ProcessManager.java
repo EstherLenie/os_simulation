@@ -1,3 +1,4 @@
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.Timer;
@@ -6,6 +7,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.lang.Runnable;
 
 public class ProcessManager implements Runnable{
+    private HashMap<Integer, Process> processes;
     private Queue<Process> newQueue;    
     private Queue<Process> readyQueue;   
     //private Queue<Process> waitingQueue;  
@@ -26,28 +28,32 @@ public class ProcessManager implements Runnable{
         readyQueue = new LinkedList<>();
        // waitingQueue = new LinkedList<>();
         terminatedQueue = new LinkedList<>();
+        processes = new HashMap<>();
         runningProcess = null; 
     }
 
     public void addProcess(Process process) {
+        process.setState(ProcessState.New);
         newQueue.offer(process);
     }
 
     public void run() {
-        System.out.println("processManager started!!!");
+        OS.log("processManager started!!!");
         while (!stop) {
 
             while(newQueue.size() != 0){
                 Process newProcess = newQueue.poll();
+                newProcess.setState(ProcessState.Ready);
+                processes.put(newProcess.getPID(), newProcess);
                 readyQueue.offer(newProcess);
             }
 
             if (runningProcess == null && !readyQueue.isEmpty()) {
-                runningProcess = readyQueue.poll();
-                startTimer(); 
+                Process process = readyQueue.poll();
+                startProcess(process); 
                 System.out.println(runningProcess.getId());
                 try {
-                    Integer s = signal.take(); 
+                    signal.take(); 
                     runningProcess.decreaseExecTime(2);
                     if (runningProcess.isFinished()) {
                         moveToTerminatedQueue(runningProcess);
@@ -74,6 +80,12 @@ public class ProcessManager implements Runnable{
         }
     }
 
+    private void startProcess(Process process) {
+        OS.memoryManager.loadProcessFrames(process.getPID());
+        runningProcess = readyQueue.poll();
+        startTimer(); 
+    }
+
     private void handleTimerInterrupt() {
         timer.cancel();
             try {
@@ -81,7 +93,6 @@ public class ProcessManager implements Runnable{
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                 }
-        
     }
 
     private void startTimer() { 
@@ -98,7 +109,16 @@ public class ProcessManager implements Runnable{
         timer.schedule(timerTask, quantum);
     }
 
+    public ProcessState getProcessState(int PID){
+        Process process = processes.get(PID);
+        if (process == null)
+            return null;
+        
+        return process.getState();
+    }
+
     private void moveToReadyQueue(Process process){
+        process.setState(ProcessState.Ready);
         readyQueue.offer(process);
     }
 
@@ -117,6 +137,22 @@ public class ProcessManager implements Runnable{
 
     public void addNewProcess(Process newProcess){
         newQueue.offer(newProcess);
+    }
+
+    public Integer getRunningProcess(){
+        if (runningProcess == null){
+            return null;
+        }
+
+        return runningProcess.getPID();
+    }
+
+    public void killProcess(){
+        if (runningProcess == null){
+            return ;
+        }
+        moveToTerminatedQueue(runningProcess);
+        runningProcess = null;
     }
 
     public void stopScheduler(){
