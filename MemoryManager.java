@@ -6,17 +6,19 @@ import java.util.Iterator;
 
 class MemoryManager {
     private int pageSize;
+    private long memorySize;
     private Hashtable<Integer,MemoryPage> frames;
     private Hashtable<Integer, List<Integer>> frameTable;
     private LinkedList<Integer> freeFrames;
 
-    public MemoryManager(int totalMemorySize, int pageSize, int osSize) {
+    public MemoryManager(long totalMemorySize, int pageSize, int osSize) {
         this.pageSize = pageSize;
         this.frames = new Hashtable<>();
         this.frameTable = new Hashtable<>();
         this.freeFrames = new LinkedList<>();
+        this.memorySize = totalMemorySize;
 
-        int numPages = (totalMemorySize - osSize) / pageSize;
+        int numPages =(int) (totalMemorySize - (long)osSize) / pageSize;
         for (int i = 0; i < numPages; i++) {
             MemoryPage page = new MemoryPage(i);
             frames.put(i, page);
@@ -24,12 +26,16 @@ class MemoryManager {
         }
     }
 
-    public int getFreeFrames() {
-        return freeFrames.size();
+    public int getFreeMemory() {
+        return freeFrames.size() * pageSize;
+    }
+
+    public long getMemorySize(){
+        return this.memorySize;
     }
 
     public void loadProcessFrames(int pid){
-        List<MemoryPage> processPages = OS.fileSystem.getProcessPages(pid);
+        List<MemoryPage> processPages = OS.getProcessPages(pid);
         if(processPages==null){
             return;
         }
@@ -90,25 +96,31 @@ class MemoryManager {
         for(Integer frameNumber : availables){
                 MemoryPage frame = frames.get(frameNumber);
 
-                OS.fileSystem.storePage(frame);
+                OS.storePage(frame);
+                if (frame.getProcessId() > 1){
+                    frameTable.get(frame.getProcessId()).remove(frameNumber);
+                }
                 frame.deallocate();
                 frame.allocate(processId);
+
+                List<Integer> table = new ArrayList<Integer>();
+                List<Integer> inMemoryFrames = frameTable.get(processId);
+                if (inMemoryFrames != null){
+                    table.addAll(inMemoryFrames);
+                }
+                table.addAll(availables);
+                frameTable.put(processId, table);
             }
     }
 
     private List<Integer> makeSpace(int numFrames){
         int pid=0;
-        List<Integer> availables = new ArrayList<Integer>();
+        List<Integer> availables = new ArrayList<Integer>(freeFrames);
         Iterator <Integer>keys = frameTable.keys().asIterator();
-
-        while(freeFrames.size() > 0){
-            int pageNumber = freeFrames.removeFirst();
-            availables.add(pageNumber);
-        }
 
         while(keys.hasNext() && availables.size() < numFrames){
             pid = keys.next();
-            if (OS.processManager.getProcessState(pid) != ProcessState.Ready)
+            if (OS.getProcessState(pid) != ProcessState.Ready)
                 continue;
 
             Iterator<Integer> allocatedFrameNumbers = frameTable.get(pid).iterator();
@@ -116,7 +128,6 @@ class MemoryManager {
                 int next = allocatedFrameNumbers.next();
                 MemoryPage frame = frames.get(next);
                 availables.add(frame.getPageNumber());
-                frameTable.get(pid).remove(next);
             }
         }
         return availables;
@@ -134,5 +145,9 @@ class MemoryManager {
         }
         frameTable.remove(processId);
         System.out.println("Deallocated memory for Process " + processId);   
+    }
+
+    public long getUsedMemory(){
+        return (frames.size() - freeFrames.size()) * pageSize;
     }
 }

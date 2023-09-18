@@ -3,25 +3,25 @@ import java.util.HashMap;
 import java.util.List;
 
 class MassStorage {
-    private int capacity;  
-    private int usedSpace; 
+    private long capacity;  
+    private long usedSpace; 
     private List<File> files = new ArrayList<>();
     private HashMap<Integer, List<MemoryPage>> pages = new HashMap<>();
 
-    public MassStorage(int capacity) {
+    public MassStorage(long capacity) {
         this.capacity = capacity;
         this.usedSpace = 0;
     }
 
-    public int getCapacity() {
+    public long getCapacity() {
         return capacity;
     }
 
-    public int getUsedSpace() {
+    public long getUsedSpace() {
         return usedSpace;
     }
 
-    public int getAvailableSpace() {
+    public long getAvailableSpace() {
         return capacity - usedSpace;
     }
 
@@ -53,5 +53,9 @@ class MassStorage {
 
     public List<File> getStoredFiles() {
         return files;
+    }
+
+    public int numFiles(){
+        return files.size();
     }
 }

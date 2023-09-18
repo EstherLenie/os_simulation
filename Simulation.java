@@ -4,13 +4,14 @@ import java.lang.Thread;
 
 public class Simulation{
     public static void main(String[] args){
-        new OS(new Machine());
+        OS.getInstance(new Machine());
 
         try {
             OS.latch.await();
             EventGenerator eventGenerator = new EventGenerator(OS.semaphoreCon, OS.semaphoreProd, OS.sytemCallParametersList);
             Thread eventGeneratorThread = new Thread(eventGenerator, "eventGenerator");
             eventGeneratorThread.start();
+            OS.start();
         }catch (InterruptedException e) {
             e.printStackTrace();
         }

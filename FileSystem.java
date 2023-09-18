@@ -7,30 +7,29 @@ class FileSystem {
         this.massStorage = massStorage;
     }
 
-    public void createFile(int[] content) {
-        File newFile = new File(content);
-        massStorage.storeFile(newFile);
+    public int numFiles(){
+        return massStorage.numFiles();
     }
 
-    public int getStorageSize(){
+    public long getStorageSize(){
         return massStorage.getCapacity();
     }
 
-    public int getUsedStorage(){
+    public long getUsedStorage(){
         return massStorage.getUsedSpace();
     }
 
-    public int getStorageAvailable(){
+    public long getStorageAvailable(){
         return massStorage.getAvailableSpace();
     }
 
-    public boolean storeFile(File file) {
+    public Log storeFile(File file) {
         int fileSize = file.getSize();
-        if (fileSize <= massStorage.getAvailableSpace() ) {
-            massStorage.storeFile(file);
-            return true;
+        if (fileSize >= massStorage.getAvailableSpace() ) {
+            return new Log(EventOutcome.ERROR, EventType.CREATE_FILE, "not enough space to create file");
         } 
-        return false; 
+        massStorage.storeFile(file);
+        return new Log(EventOutcome.SUCCESS, EventType.CREATE_FILE, "new file created"); 
     }
 
     public boolean storePage(MemoryPage page){

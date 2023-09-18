@@ -8,9 +8,14 @@ public class EventGenerator extends Thread
 { 
     public Semaphore semCon;
     public Semaphore semProd;
-    private Queue<Integer> systemCallParameters; 
+    private volatile Queue<Integer> systemCallParameters; 
     private Queue<Integer> listOfParams = new LinkedList<>();
-    Random random = new Random() ;
+    private static Random random = new Random();
+    private static final int MIN_PROCESS_SIZE = 50000000;
+    private static final int MAX_PROCESS_SIZE = 200000000;
+    private static final int MIN_PROCESS_CPU_TIME = 400;
+    private static final int MAX_PROCESS_CPU_TIME = 40000;
+
 
     public EventGenerator(Semaphore semCon, Semaphore semProd, Queue<Integer> parameters){
         this.systemCallParameters = parameters;
@@ -22,7 +27,7 @@ public class EventGenerator extends Thread
         while(true){
             try {
                 semProd.acquire();
-                int EventId = random.nextInt(5); 
+                int EventId = random.nextInt(6); 
                 listOfParams.offer(EventId);
 
                 switch(EventId){
@@ -42,8 +47,7 @@ public class EventGenerator extends Thread
                         // request process id
                         break;
                     case 5:
-                        System.out.println("Interruption ayant pour ID"+ EventId);
-                        // simulation.put(this.EventId);
+                        // request system infos
                         break;
                 }
 
@@ -56,30 +60,58 @@ public class EventGenerator extends Thread
                 semCon.release();
             }
             try{
-                Thread.sleep(1000);  
+                Thread.sleep(4000);  
             }catch(InterruptedException e){
                 
             }       
         }
     }
 
+    public void generateRandomText(int maxLength) {
+        int textLength = random.nextInt(maxLength) + 1; 
+
+        for (int i = 0; i < textLength; i++) {
+            int randomAscii = random.nextInt(94) + 33;
+            listOfParams.offer(randomAscii);
+        }
+    }
+
+    public void generateRandomText(int minLength, int maxLength) {
+        int textLength = random.nextInt(maxLength) + minLength; 
+
+        for (int i = 0; i < textLength; i++) {
+            int randomAscii = random.nextInt(94) + 33;
+            listOfParams.offer(randomAscii);
+        }
+    }
+
     private void requestProcessCreation(){
-        generateParams(2);
+        listOfParams.offer(random.nextInt(MAX_PROCESS_SIZE - MIN_PROCESS_SIZE) + MIN_PROCESS_SIZE);//process size
+        listOfParams.offer(random.nextInt(MAX_PROCESS_CPU_TIME - MIN_PROCESS_CPU_TIME) + MIN_PROCESS_CPU_TIME);//process size
     }
 
     private void requestStringPrinting(){
         int stringLength = random.nextInt(500);
-        generateParams(stringLength);
+        generateRandomText(stringLength, 500);
     }
 
     private void requestFileCreation(){
         int fileContent = random.nextInt(500);
-        generateParams(fileContent);
+
+        generateRandomFileName();
+        generateRandomText(fileContent);
     }
 
-    private void generateParams(int length){
-        for (int i= 0; i<length; i++){
-            listOfParams.offer(random.nextInt(256));
+    public void generateRandomFileName() {
+        int textLength = random.nextInt(20); 
+
+        for (int i = 0; i < textLength; i++) {
+            int randomAscii = random.nextInt(26) + 97;
+            listOfParams.offer(randomAscii);
+        }
+
+        for (int i = 0; i < 20 - textLength; i++ ){
+            listOfParams.offer(32);
         }
     }
 }
