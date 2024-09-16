@@ -1,4 +1,4 @@
 public interface Task {
-    public void execute();
-    public int getProcessId(); 
+    public Log execute();
+    public void log(Log log);
 }
